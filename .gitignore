@@ -7,6 +7,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
 
+# Visual Studio IDE cache
+.vs/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -55,3 +58,21 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# === DO NOT COMMIT REAL NOTE DATA ===
+# Guard against accidentally checking in a copied database full of your
+# actual sticky notes while testing locally.
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+plum.sqlite*
+sticky_inspect/
+*.db
+
+# Ignore IDE and GitHub files
+.github/
+.vscode/
+
+# Ignore Claude files
+.claude/
+tasks/

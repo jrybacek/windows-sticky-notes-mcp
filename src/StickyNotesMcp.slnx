@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="StickyNotesMcp.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="../tests/StickyNotesMcp.Tests.csproj" />
+  </Folder>
+</Solution>
