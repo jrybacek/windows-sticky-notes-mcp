@@ -10,18 +10,14 @@ namespace StickyNotesMcp.Data;
 /// consistent view without locking the live database, all three files are copied to a temp
 /// directory and the copy is opened read-only.
 /// </summary>
-public sealed class DatabaseSnapshotFactory : IDatabaseSnapshotFactory
+public sealed class DatabaseSnapshotFactory(
+    IOptions<StickyNotesOptions> options,
+    ILogger<DatabaseSnapshotFactory> logger)
+    : IDatabaseSnapshotFactory
 {
     private static readonly string[] SidecarSuffixes = ["", "-wal", "-shm"];
 
-    private readonly StickyNotesOptions _options;
-    private readonly ILogger<DatabaseSnapshotFactory> _logger;
-
-    public DatabaseSnapshotFactory(IOptions<StickyNotesOptions> options, ILogger<DatabaseSnapshotFactory> logger)
-    {
-        _options = options.Value;
-        _logger = logger;
-    }
+    private readonly StickyNotesOptions _options = options.Value;
 
     public DatabaseSnapshot CreateSnapshot()
     {
@@ -38,7 +34,7 @@ public sealed class DatabaseSnapshotFactory : IDatabaseSnapshotFactory
         }
 
         var databaseFilePath = Path.Combine(workDirectory, _options.DatabaseFileName);
-        _logger.LogDebug("Created Sticky Notes snapshot from {Source} at {Work}", sourceDirectory, workDirectory);
+        logger.LogDebug("Created Sticky Notes snapshot from {Source} at {Work}", sourceDirectory, workDirectory);
         return new DatabaseSnapshot(workDirectory, databaseFilePath);
     }
 }

@@ -5,18 +5,10 @@ namespace StickyNotesMcp.Data;
 /// sidecars). The live database is never opened for querying — only copied. Disposing the
 /// snapshot removes the temporary directory.
 /// </summary>
-public sealed class DatabaseSnapshot : IDisposable
+public sealed class DatabaseSnapshot(string directory, string databaseFilePath) : IDisposable
 {
-    private readonly string _directory;
-
-    public DatabaseSnapshot(string directory, string databaseFilePath)
-    {
-        _directory = directory;
-        DatabaseFilePath = databaseFilePath;
-    }
-
     /// <summary>Full path to the copied database file inside the temp directory.</summary>
-    public string DatabaseFilePath { get; }
+    public string DatabaseFilePath { get; } = databaseFilePath;
 
     /// <summary>True if the database file was actually copied (i.e. the source existed).</summary>
     public bool DatabaseExists => File.Exists(DatabaseFilePath);
@@ -25,8 +17,8 @@ public sealed class DatabaseSnapshot : IDisposable
     {
         try
         {
-            if (Directory.Exists(_directory))
-                Directory.Delete(_directory, recursive: true);
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, recursive: true);
         }
         catch
         {

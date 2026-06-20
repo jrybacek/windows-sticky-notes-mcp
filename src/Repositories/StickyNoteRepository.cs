@@ -14,34 +14,22 @@ namespace StickyNotesMcp.Repositories;
 /// table with LINQ (no raw SQL), and maps rows to <see cref="StickyNote"/>. A fresh context is
 /// created per call because each snapshot lives at a different temp path.
 /// </summary>
-public sealed class StickyNoteRepository : IStickyNoteRepository
+public sealed class StickyNoteRepository(
+    IDatabaseSnapshotFactory snapshotFactory,
+    INoteTextCleaner cleaner,
+    IOptions<StickyNotesOptions> options,
+    ILogger<StickyNoteRepository> logger)
+    : IStickyNoteRepository
 {
-    private readonly IDatabaseSnapshotFactory _snapshotFactory;
-    private readonly INoteTextCleaner _cleaner;
-    private readonly IOptions<StickyNotesOptions> _options;
-    private readonly ILogger<StickyNoteRepository> _logger;
-
-    public StickyNoteRepository(
-        IDatabaseSnapshotFactory snapshotFactory,
-        INoteTextCleaner cleaner,
-        IOptions<StickyNotesOptions> options,
-        ILogger<StickyNoteRepository> logger)
-    {
-        _snapshotFactory = snapshotFactory;
-        _cleaner = cleaner;
-        _options = options;
-        _logger = logger;
-    }
-
     public async Task<IReadOnlyList<StickyNote>> GetActiveNotesAsync(CancellationToken cancellationToken = default)
     {
-        using var snapshot = _snapshotFactory.CreateSnapshot();
+        using var snapshot = snapshotFactory.CreateSnapshot();
         if (!snapshot.DatabaseExists)
         {
-            var dir = _options.Value.ResolveSourceDirectory();
-            _logger.LogError("Sticky Notes database not found under {Dir}.", dir);
+            var dir = options.Value.ResolveSourceDirectory();
+            logger.LogError("Sticky Notes database not found under {Dir}.", dir);
             throw new FileNotFoundException(
-                $"Sticky Notes database '{_options.Value.DatabaseFileName}' not found under '{dir}'. " +
+                $"Sticky Notes database '{options.Value.DatabaseFileName}' not found under '{dir}'. " +
                 "Is the Sticky Notes app installed for this user?");
         }
 
@@ -67,14 +55,14 @@ public sealed class StickyNoteRepository : IStickyNoteRepository
         var notes = new List<StickyNote>(rows.Count);
         foreach (var row in rows)
         {
-            var text = _cleaner.Clean(row.Text ?? string.Empty);
+            var text = cleaner.Clean(row.Text ?? string.Empty);
             if (string.IsNullOrWhiteSpace(text))
                 continue;
 
             notes.Add(new StickyNote(text, TicksToDateTimeOffset(row.UpdatedAt)));
         }
 
-        _logger.LogInformation("Read {Count} active sticky note(s).", notes.Count);
+        logger.LogInformation("Read {Count} active sticky note(s).", notes.Count);
         return notes;
     }
 

@@ -8,12 +8,7 @@ namespace StickyNotesMcp.Data;
 /// as a keyless query type (no tracking, no writes — matching the read-only contract) via the
 /// attributes on <see cref="NoteEntity"/>.
 /// </summary>
-public sealed class StickyNotesDbContext : DbContext
+public sealed class StickyNotesDbContext(DbContextOptions<StickyNotesDbContext> options) : DbContext(options)
 {
-    public StickyNotesDbContext(DbContextOptions<StickyNotesDbContext> options)
-        : base(options)
-    {
-    }
-
     public DbSet<NoteEntity> Notes => Set<NoteEntity>();
 }
