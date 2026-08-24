@@ -69,9 +69,11 @@ plum.sqlite*
 sticky_inspect/
 *.db
 
-# Ignore IDE and GitHub files
-.github/
+# Ignore IDE files
 .vscode/
+
+# Ignore Rider/ReSharper user-specific solution settings
+*.DotSettings.user
 
 # Ignore Claude files
 .claude/
