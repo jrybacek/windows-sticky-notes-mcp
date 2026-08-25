@@ -1,6 +1,6 @@
 # StickyNotesMcp
 
-A read-only [Model Context Protocol](https://modelcontextprotocol.io) server that exposes your **actual Windows Sticky Notes** to MCP clients like Claude Desktop, so an AI assistant can read your notes and help you act on them.
+A read-only [Model Context Protocol](https://modelcontextprotocol.io) server that exposes your **actual Windows Sticky Notes** to MCP clients like Claude Desktop, Claude Code, and Codex, so an AI assistant can read your notes and help you act on them.
 
 > **This reads the real app.** Unlike most "sticky notes MCP" demos — which store notes in their own text file — this server reads the live `plum.sqlite` database that the Microsoft Sticky Notes app actually uses. The notes synced to your Microsoft account are what get surfaced.
 
@@ -12,32 +12,76 @@ A read-only [Model Context Protocol](https://modelcontextprotocol.io) server tha
 - **Safe by design:** copy-then-read (never opens the live DB except to copy it) and strictly read-only.
 - SOLID .NET 10 codebase with unit tests.
 
-## Software requirements
+## Requirements
 
 - Windows with the Microsoft Sticky Notes app installed (schema verified against version **6.x**).
-- [.NET 10 SDK](https://dotnet.microsoft.com/download).
-- An MCP client (Claude Desktop, Claude Code, etc.).
+- An MCP client (Claude Desktop, Claude Code, Codex CLI, etc.).
+
+No .NET runtime install is required — the prebuilt release below is self-contained.
 
 ## Installation
 
-### Build
+### 1. Download
+
+Grab the latest `StickyNotesMcp-win-x64.exe` (or `StickyNotesMcp-win-arm64.exe` for ARM64 Windows devices) from the [Releases page](https://github.com/jrybacek/windows-sticky-notes-mcp/releases).
+
+Put it somewhere stable — it stays in place after setup, so a temp/Downloads folder isn't a good fit:
 
 ```powershell
-# 1. Clone
-git clone https://github.com/<you>/windows-sticky-notes-mcp.git
-cd windows-sticky-notes-mcp
-cd src
-
-# 2. Build (produces src\bin\Release\net10.0\StickyNotesMcp.exe)
-dotnet build -c Release
-
-# 3. (optional) Run the tests
-dotnet test -c Release
+New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\Programs\StickyNotesMcp" | Out-Null
+Move-Item ~\Downloads\StickyNotesMcp-win-x64.exe "$env:LOCALAPPDATA\Programs\StickyNotesMcp\"
 ```
 
-Then point your MCP client at the built exe.
+Then verify and unblock it:
 
-### Configure Claude Desktop
+```powershell
+$exe = "$env:LOCALAPPDATA\Programs\StickyNotesMcp\StickyNotesMcp-win-x64.exe"
+
+# Compare against the .sha256 file published alongside the release asset
+Get-FileHash -Algorithm SHA256 $exe
+
+# The exe is downloaded from the internet, and unsigned - Windows will otherwise
+# block or SmartScreen-warn on first run.
+Unblock-File $exe
+```
+
+> **Unsigned binary:** these release assets are not code-signed. SmartScreen may warn on
+> first run — verify the SHA-256 against the published `.sha256` file before trusting it,
+> then choose *More info → Run anyway*. See [Troubleshooting](docs/troubleshooting.md) if
+> Windows blocks it outright.
+
+Prefer to build it yourself instead? See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+### 2. Connect your client
+
+Pick your client below. `sticky-notes` is just a suggested server name — use whatever you like, as long as it's consistent within one config.
+
+#### Claude Code
+
+```powershell
+claude mcp add --scope user --transport stdio sticky-notes -- "$env:LOCALAPPDATA\Programs\StickyNotesMcp\StickyNotesMcp-win-x64.exe"
+```
+
+`--scope user` makes the server available in every project, and writes the entry to `%USERPROFILE%\.claude.json`. The `--` before the path is required — without it, Claude Code tries to parse the path as its own flags.
+
+Equivalent manual edit to `%USERPROFILE%\.claude.json`, under the top-level `mcpServers` object:
+
+```json
+{
+  "mcpServers": {
+    "sticky-notes": {
+      "type": "stdio",
+      "command": "C:\\Users\\you\\AppData\\Local\\Programs\\StickyNotesMcp\\StickyNotesMcp-win-x64.exe",
+      "args": [],
+      "env": {}
+    }
+  }
+}
+```
+
+> Note: MCP servers go in `.claude.json`, **not** `settings.json` — the settings schema has no MCP server field. Restart Claude Code, then run `/mcp` to confirm the `sticky-notes` server is connected.
+
+#### Claude Desktop
 
 > **Microsoft Store / MSIX build:** the in-app **Settings → Edit Config** button opens `%APPDATA%\Claude\claude_desktop_config.json`, but the Store build does **not** read that file — it reads a *virtualized* copy. Edit the virtualized path below, or your server will silently never appear.
 
@@ -49,13 +93,13 @@ Then point your MCP client at the built exe.
 
    Save it as valid JSON, **UTF-8 without a BOM**. (If you use the standalone, non-Store `.exe` build instead, its config lives at `%APPDATA%\Claude\claude_desktop_config.json`.)
 
-2. Add the server, pointing `command` at the absolute path of the exe you built:
+2. Add the server, pointing `command` at the exe you downloaded:
 
    ```json
    {
      "mcpServers": {
        "sticky-notes": {
-         "command": "C:\\path\\to\\windows-sticky-notes-mcp\\src\\bin\\Release\\net10.0\\StickyNotesMcp.exe"
+         "command": "C:\\Users\\you\\AppData\\Local\\Programs\\StickyNotesMcp\\StickyNotesMcp-win-x64.exe"
        }
      }
    }
@@ -65,24 +109,29 @@ Then point your MCP client at the built exe.
 
 4. **Verify:** `Settings → Developer` lists `sticky-notes`, and a `mcp-server-sticky-notes.log` file appears. Then ask *"What's on my sticky notes?"*
 
-### Configure Claude Code
+#### Codex CLI
 
-Edit your user config at `%USERPROFILE%\.claude.json` (i.e. `C:\Users\<you>\.claude.json`) and add a `sticky-notes` entry under the top-level `mcpServers` object:
-
-```json
-{
-  "mcpServers": {
-    "sticky-notes": {
-      "type": "stdio",
-      "command": "C:\\path\\to\\windows-sticky-notes-mcp\\src\\bin\\Release\\net10.0\\StickyNotesMcp.exe",
-      "args": [],
-      "env": {}
-    }
-  }
-}
+```powershell
+codex mcp add sticky-notes -- "$env:LOCALAPPDATA\Programs\StickyNotesMcp\StickyNotesMcp-win-x64.exe"
 ```
 
-> Note: MCP servers go in `.claude.json`, **not** `settings.json` — the settings schema has no MCP server field. Restart Claude Code, then run `/mcp` to confirm the `sticky-notes` server is connected.
+Equivalent manual edit to `%USERPROFILE%\.codex\config.toml`:
+
+```toml
+[mcp_servers.sticky-notes]
+command = 'C:\Users\you\AppData\Local\Programs\StickyNotesMcp\StickyNotesMcp-win-x64.exe'
+args = []
+```
+
+> Use a single-quoted TOML string (`'...'`) for the path. TOML's single-quoted "literal"
+> strings don't process backslash escapes, so a Windows path doesn't need doubled
+> backslashes there — a double-quoted string would need `\\` for every `\`.
+
+Restart Codex, then confirm the server is connected (`/mcp` in the Codex CLI, or check its MCP status output).
+
+### 3. Verify
+
+Ask your assistant *"What's on my sticky notes?"* — it should call `get_sticky_notes` and return your current notes.
 
 ## Documentation
 
@@ -90,6 +139,11 @@ Edit your user config at `%USERPROFILE%\.claude.json` (i.e. `C:\Users\<you>\.cla
 - [Configuration](docs/configuration.md) — database location options and customizing the schema for other Sticky Notes versions.
 - [Privacy & scope](docs/privacy-and-scope.md) — what the server deliberately does *not* do, and how your note data flows.
 - [Troubleshooting](docs/troubleshooting.md) — garbled output, resurfacing notes, registration failures, "database not found".
+- [Releasing](docs/releasing.md) — maintainer runbook for cutting a new release.
+
+## Contributing
+
+Want to build from source, run the tests, or open a PR? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

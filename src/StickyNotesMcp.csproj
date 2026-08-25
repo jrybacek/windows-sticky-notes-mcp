@@ -5,6 +5,24 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>StickyNotesMcp</AssemblyName>
+    <Version>0.1.0</Version>
+    <Authors>Joe Rybacek</Authors>
+    <Description>Read-only MCP server exposing Windows Sticky Notes.</Description>
+    <RepositoryUrl>https://github.com/jrybacek/windows-sticky-notes-mcp</RepositoryUrl>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <!-- Only applies when publishing for a specific runtime (e.g. `dotnet publish -r win-x64`),
+       so `dotnet build`/`dotnet test` without a RID are unaffected. Trimming/AOT are
+       deliberately NOT enabled: Program.cs uses WithToolsFromAssembly() reflection to
+       discover MCP tools, and EF Core is reflection-heavy, so trimming would silently
+       strip tool registration. -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
 
   <ItemGroup>
