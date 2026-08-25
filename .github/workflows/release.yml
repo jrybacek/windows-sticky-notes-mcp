@@ -91,7 +91,7 @@ jobs:
           $hash = Get-FileHash -Algorithm SHA256 $asset
           "$($hash.Hash.ToLower())  StickyNotesMcp-${{ matrix.rid }}.exe" | Out-File -Encoding ascii "$asset.sha256"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-assets-${{ matrix.rid }}
           path: |
