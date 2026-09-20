@@ -11,6 +11,7 @@
     <Description>Read-only MCP server exposing Windows Sticky Notes.</Description>
     <RepositoryUrl>https://github.com/jrybacek/windows-sticky-notes-mcp</RepositoryUrl>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <!-- `dotnet pack` produces a .NET global tool as an alternative install path to the
