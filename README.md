@@ -1,8 +1,6 @@
 # StickyNotesMcp
 
-A read-only [Model Context Protocol](https://modelcontextprotocol.io) server that exposes your **actual Windows Sticky Notes** to MCP clients like Claude Desktop, Claude Code, and Codex, so an AI assistant can read your notes and help you act on them.
-
-> **This reads the real app.** Unlike most "sticky notes MCP" demos — which store notes in their own text file — this server reads the live `plum.sqlite` database that the Microsoft Sticky Notes app actually uses. The notes synced to your Microsoft account are what get surfaced.
+A read-only [Model Context Protocol](https://modelcontextprotocol.io) server that reads the **real** Windows Sticky Notes database — the live `plum.sqlite` that the Microsoft Sticky Notes app actually writes to, not a mock or a separate text file like most "sticky notes MCP" demos. It exposes your actual, Microsoft-account-synced notes to MCP clients like Claude Desktop, Claude Code, and Codex, so an AI assistant can read your notes and help you act on them.
 
 ## Features
 
@@ -52,9 +50,19 @@ Unblock-File $exe
 
 Prefer to build it yourself instead? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+#### Alternative: install as a .NET tool
+
+Already have the [.NET 10 SDK/runtime](https://dotnet.microsoft.com/download) installed? Skip the unsigned exe and SmartScreen entirely:
+
+```powershell
+dotnet tool install --global StickyNotesMcp
+```
+
+This puts a `sticky-notes-mcp` command on your `PATH` — use that in place of the exe path in the client configs below.
+
 ### 2. Connect your client
 
-Pick your client below. `sticky-notes` is just a suggested server name — use whatever you like, as long as it's consistent within one config.
+Pick your client below. `sticky-notes` is just a suggested server name — use whatever you like, as long as it's consistent within one config. The examples use the downloaded exe path; if you installed via `dotnet tool install`, substitute `sticky-notes-mcp` for the full path.
 
 #### Claude Code
 
