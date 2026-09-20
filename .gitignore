@@ -78,3 +78,6 @@ sticky_inspect/
 # Ignore Claude files
 .claude/
 tasks/
+
+# Commit-message conventions
+.github/commit-instructions.md
