@@ -13,6 +13,25 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
+  <!-- `dotnet pack` produces a .NET global tool as an alternative install path to the
+       unsigned self-contained exe: `dotnet tool install -g StickyNotesMcp`. Requires the
+       .NET runtime (unlike the self-contained exe), but sidesteps SmartScreen entirely.
+       PackAsTool only affects packing/`dotnet tool install`, so it doesn't interact with
+       the RID-conditioned self-contained publish settings below. -->
+  <PropertyGroup>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>sticky-notes-mcp</ToolCommandName>
+    <PackageId>StickyNotesMcp</PackageId>
+    <PackageTags>mcp;model-context-protocol;sticky-notes;windows</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/jrybacek/windows-sticky-notes-mcp</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
   <!-- Only applies when publishing for a specific runtime (e.g. `dotnet publish -r win-x64`),
        so `dotnet build`/`dotnet test` without a RID are unaffected. Trimming/AOT are
        deliberately NOT enabled: Program.cs uses WithToolsFromAssembly() reflection to
